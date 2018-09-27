@@ -77,7 +77,7 @@ public final class VerifyingFileFactory {
     private void doWarnForRelativePath(File file) {
         if (file.isAbsolute()) return;
         if (file.getPath().substring(0, 2).equals("." + File.separator)) return;
-        log.warn(file.getPath() + " is relative. Prepend ." + File.separator + " to indicate that you're sure!");
+        LOGGER.warn(file.getPath() + " is relative. Prepend ." + File.separator + " to indicate that you're sure!");
     }
 
     public static class Builder {
