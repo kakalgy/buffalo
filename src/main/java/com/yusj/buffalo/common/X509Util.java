@@ -3,9 +3,7 @@ package com.yusj.buffalo.common;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
+import javax.net.ssl.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -45,6 +43,104 @@ public class X509Util {
     @Deprecated
     public static final String SSL_AUTHPROVIDER = "zookeeper.ssl.authProvider";
 
+
+    public static SSLContext createSSLContext() throws X509Exception.SSLContextException {
+        /**
+         * Since Configuration initializes the key store and trust store related
+         * configuration from system property. Reading property from
+         * configuration will be same reading from system property
+         */
+        ZKConfig config = new ZKConfig();
+        return createSSLContext(config);
+    }
+
+    public static SSLContext createSSLContext(ZKConfig config) throws X509Exception.SSLContextException {
+        KeyManager[] keyManagers = null;
+        TrustManager[] trustManagers = null;
+
+        String keyStoreLocationProp = config.getProperty(ZKConfig.SSL_KEYSTORE_LOCATION);
+        String keyStorePasswordProp = config.getProperty(ZKConfig.SSL_KEYSTORE_PASSWD);
+
+        // There are legal states in some use cases for null KeyManager or TrustManager.
+        // But if a user wanna specify one, location and password are required.
+
+        if (keyStoreLocationProp == null && keyStorePasswordProp == null) {
+            LOGGER.warn("keystore not specified for client connection");
+        } else {
+            if (keyStoreLocationProp == null) {
+                throw new X509Exception.SSLContextException("keystore location not specified for client connection");
+            }
+            if (keyStorePasswordProp == null) {
+                throw new X509Exception.SSLContextException("keystore password not specified for client connection");
+            }
+            try {
+                keyManagers = new KeyManager[]{
+                        createKeyManager(keyStoreLocationProp, keyStorePasswordProp)};
+            } catch (X509Exception.KeyManagerException e) {
+                throw new X509Exception.SSLContextException("Failed to create KeyManager", e);
+            }
+        }
+
+        String trustStoreLocationProp = config.getProperty(ZKConfig.SSL_TRUSTSTORE_LOCATION);
+        String trustStorePasswordProp = config.getProperty(ZKConfig.SSL_TRUSTSTORE_PASSWD);
+
+        if (trustStoreLocationProp == null && trustStorePasswordProp == null) {
+            LOGGER.warn("Truststore not specified for client connection");
+        } else {
+            if (trustStoreLocationProp == null) {
+                throw new X509Exception.SSLContextException("Truststore location not specified for client connection");
+            }
+            if (trustStorePasswordProp == null) {
+                throw new X509Exception.SSLContextException("Truststore password not specified for client connection");
+            }
+            try {
+                trustManagers = new TrustManager[]{
+                        createTrustManager(trustStoreLocationProp, trustStorePasswordProp)};
+            } catch (X509Exception.TrustManagerException e) {
+                throw new X509Exception.SSLContextException("Failed to create TrustManager", e);
+            }
+        }
+
+        SSLContext sslContext = null;
+        try {
+            sslContext = SSLContext.getInstance("TLSv1");
+            sslContext.init(keyManagers, trustManagers, null);
+        } catch (Exception e) {
+            throw new X509Exception.SSLContextException(e);
+        }
+        return sslContext;
+    }
+
+    public static X509KeyManager createKeyManager(String keyStoreLocation, String keyStorePassword)
+            throws X509Exception.KeyManagerException {
+        FileInputStream inputStream = null;
+        try {
+            char[] keyStorePasswordChars = keyStorePassword.toCharArray();
+            File keyStoreFile = new File(keyStoreLocation);
+            KeyStore ks = KeyStore.getInstance("JKS");
+            inputStream = new FileInputStream(keyStoreFile);
+            ks.load(inputStream, keyStorePasswordChars);
+            KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
+            kmf.init(ks, keyStorePasswordChars);
+
+            for (KeyManager km : kmf.getKeyManagers()) {
+                if (km instanceof X509KeyManager) {
+                    return (X509KeyManager) km;
+                }
+            }
+            throw new X509Exception.KeyManagerException("Couldn't find X509KeyManager");
+
+        } catch (Exception e) {
+            throw new X509Exception.KeyManagerException(e);
+        } finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+    }
 
 
     public static X509TrustManager createTrustManager(String trustStoreLocation, String trustStorePassword) throws X509Exception.TrustManagerException {

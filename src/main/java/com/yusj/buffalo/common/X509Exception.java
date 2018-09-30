@@ -48,5 +48,9 @@ public class X509Exception extends Exception {
         public SSLContextException(Throwable cause) {
             super(cause);
         }
+
+        public SSLContextException(String message, Throwable cause) {
+            super(message, cause);
+        }
     }
 }
