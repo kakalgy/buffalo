@@ -1,13 +1,15 @@
 package com.yusj.buffalo.jute.compiler;
 
 /**
- * Abstract base class for all the "compound" types such as ustring,
- * buffer, vector, map, and record.
- */
+ * @Description Abstract base class for all the "compound"(复合) types such as ustring,
+ * * buffer, vector, map, and record.
+ * @Param
+ * @return
+ **/
 abstract class JCompType extends JType {
 
     /**
-     * Creates a new instance of JCompType
+     * Creates a new instance of JCompType</p>注意没有解封装的方法
      */
     JCompType(String cType, String cppType, String csharpType, String javaType, String suffix, String wrapper, String csharpWrapper) {
         super(cType, cppType, csharpType, javaType, suffix, wrapper, csharpWrapper, null);
