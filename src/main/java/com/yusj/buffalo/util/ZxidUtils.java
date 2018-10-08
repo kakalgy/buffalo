@@ -10,6 +10,7 @@ package com.yusj.buffalo.util;
  * 全文地址请点击：https://blog.csdn.net/gs80140/article/details/51496925?utm_source=copy
  */
 public class ZxidUtils {
+
     public static long getEpochFromZxid(long zxid) {
         return zxid >> 32L;
     }
@@ -36,5 +37,6 @@ public class ZxidUtils {
         System.out.println(Long.toBinaryString(getCounterFromZxid(100)));
         System.out.println(Long.toBinaryString(makeZxid(100, 10)));
 //        System.out.println(Long.toBinaryString(zxidToString(100)));
+//            System.out.println(Long.parseLong(ffffffffL));
     }
 }
