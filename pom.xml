@@ -8,6 +8,10 @@
     <artifactId>buffalo</artifactId>
     <packaging>pom</packaging>
     <version>1.0</version>
+    <modules>
+        <module>rhinoceros</module>
+        <module>pangolin</module>
+    </modules>
 
     <name>buffalo</name>
     <!-- FIXME change it to the project's website -->
